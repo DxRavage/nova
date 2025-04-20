@@ -1,0 +1,246 @@
+<section class="grid grid-row gap-4 p-14">
+  <section
+    class="flex justify-center text-center gap-4 p-4 border-2 border-stone-600/40 rounded-xl mx-auto bg-gray-400/50"
+  >
+    <input
+      class="p-2 w-36 md:w-64"
+      type="text"
+      id="queryInput"
+      placeholder="Enter your query"
+    />
+    <button
+      class="bg-moss hover:bg-emerald text-silk px-4 py-2 rounded-lg cursor-pointer shadow-sm shadow-earie"
+      id="updateButton">Search</button
+    >
+  </section>
+
+  <div class="border-2 border-stone-600/40 rounded-xl bg-gray-400/50 px-32">
+    <section class="mt-8" id="bookDetails"></section>
+
+    <section
+      class="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+      id="booksContainer"
+    >
+    </section>
+  </div>
+
+</section>
+
+<script>
+  // --- API Configuration ---
+  const url = "https://www.googleapis.com/books/v1/volumes?q=";
+  const maxResults = 20;
+  const orderBy = "relevance";
+
+  // --- Application State ---
+  let query: string = "";
+  let books: Book[] = [];
+  let selectedBook: Book | null = null;
+
+  // DOM Element References
+  const queryInput = document.getElementById(
+    "queryInput"
+  ) as HTMLInputElement | null;
+  const updateButton = document.getElementById(
+    "updateButton"
+  ) as HTMLButtonElement | null;
+  const booksContainer = document.getElementById("booksContainer");
+  const bookDetailsContainer = document.getElementById("bookDetails");
+
+  // --- Type Definition ---
+  type Book = {
+    title: string;
+    authors: string[];
+    description: string;
+    thumbnail?: string | null;
+    publishedDate?: string;
+    categories?: string[];
+    averageRating?: number | null;
+    ratingsCount?: number | null;
+    previewLink?: string;
+    identifier: string;
+  };
+
+  /**
+   * Fetches book data from the Google Books API based on the provided query.
+   * @param query The search term.
+   * @returns A Promise that resolves to an array of Book objects, or an empty array if an error occurs.
+   */
+  async function fetchBooks(query: string): Promise<Book[]> {
+    try {
+      // Construct the API URL with the query, maximum results, and order by relevance.
+      const apiUrl = `${url}${encodeURIComponent(query)}&maxResults=${maxResults}&orderBy=${orderBy}`;
+      const res = await fetch(apiUrl);
+      // Check if the API request was successful (status code 2xx)
+      if (!res.ok) {
+        throw new Error(`HTTP error! Status: ${res.status}`);
+      }
+      // Parse the JSON response from the API.
+      const json = await res.json();
+
+      // Map the 'items' array (if it exists) to an array of Book objects.
+      return (
+        json.items?.map((item: any) => ({
+          title: item.volumeInfo?.title || "No title",
+          authors: item.volumeInfo?.authors || ["Unknown"],
+          description:
+            item.volumeInfo?.description || "No description available",
+          thumbnail: item.volumeInfo?.imageLinks?.thumbnail || null,
+          publishedDate: item.volumeInfo?.publishedDate || "Unknown",
+          categories: item.volumeInfo?.categories || [],
+          averageRating: item.volumeInfo?.averageRating ?? null,
+          ratingsCount: item.volumeInfo?.ratingsCount ?? null,
+          previewLink: item.volumeInfo?.previewLink || null,
+        })) ?? [] // Return an empty array if json.items is undefined.
+      ); 
+    } catch (error) {
+      // Log any errors that occur during the API request or data processing.
+      console.error("Error fetching books:", error); // Return an empty array in case of an error.
+      return [];
+    } 
+  }
+  /**
+   * Creates an HTML string for displaying a book's thumbnail image or a "No Image Available" message.
+   * @param thumbnail The URL of the book's thumbnail image, or null if not available.
+   * @param title The title of the book (used for the alt attribute of the image).
+   * @param isLink Optional. If true, the image will be wrapped in a link to the book details section. Defaults to false.
+   * @returns An HTML string representing the book's image or a placeholder.
+   */
+  function createBookImageElement(
+    thumbnail: string | null,
+    title: string,
+    isLink = false
+  ): string {
+    if (thumbnail) {
+      const img = `<img class="object-contain rounded-md shadow-md" src="${thumbnail}" alt="${title}" ${isLink ? 'width="150" height="200"' : ""} />`;
+      return isLink
+        ? `<a href="#bookDetails" class="hover:opacity-65">${img}</a>`
+        : img;
+    } else {
+      return `<p class="text-center text-earie">No Image Available</p>`;
+    }
+  }
+
+  /**
+   * Renders the details of a selected book in the bookDetailsContainer.
+   * If a book object is provided, it generates the HTML to display its information.
+   * If null is provided, it clears the bookDetailsContainer and hides it.
+   * @param book The Book object to display, or null to clear the details.
+   */
+  function renderBookDetails(book: Book | null) {
+    if (!bookDetailsContainer) return; // Exit if the container element is not found
+
+    if (book) {
+      // Create the HTML for the book details using the provided Book object.
+      const imageElement = createBookImageElement(book.thumbnail ?? null, book.title);
+      bookDetailsContainer.innerHTML = `
+		  <div class="bg-silk p-4 rounded-md shadow-md shadow-earie text-left">
+			<div class="flex gap-4 mb-4">
+			  ${imageElement}
+			  <div>
+				<h2 class="font-bold text-sm md:text-xl text-moss">${book.title}</h2>
+				<p class="text-sm opacity-75 text-citron">${book.authors.join(", ")}</p>
+				${book.publishedDate ? `<p class="text-xs md:text-sm text-earie">Published: ${book.publishedDate}</p>` : ""}
+				${book.averageRating ? `<p class="text-xs md:text-sm text-earie">Rating: ${book.averageRating} (${book.ratingsCount || "No"} ratings)</p>` : ""}
+				${book.categories && book.categories.length > 0 ? `<p class="text-xs md:text-sm text-earie">Categories: ${book.categories.join(", ")}</p>` : ""}
+				${book.previewLink ? `<a href="${book.previewLink}" target="_blank" class="text-blue-500 hover:underline">Preview</a>` : ""}
+			  </div>
+			</div>
+			<p class="text-earie text-xs md:text-sm">${book.description}</p>
+		  </div>
+		`;
+      bookDetailsContainer.style.display = "block"; // Make the details section visible.
+    } else {
+      // Clear the content of the book details container and hide it.
+      bookDetailsContainer.innerHTML = "";
+      bookDetailsContainer.style.display = "none";
+    }
+  }
+
+  /**
+   * Renders the list of fetched books in the booksContainer.
+   * For each book, it creates a clickable div displaying the thumbnail and title.
+   * Clicking a book will trigger the display of its details.
+   * @param books An array of Book objects to render.
+   */
+  function renderBooks(books: Book[]) {
+    if (!booksContainer) return; // Exit if the container element is not found.
+    booksContainer.innerHTML = ""; // Clear any existing content in the container
+
+    if (books.length > 0) {
+      // Iterate through the array of books and create a display element for each.
+      books.forEach((book, index) => {
+        const bookDiv = document.createElement("div");
+        bookDiv.className =
+          "p-4 bg-moss hover:bg-hover text-earie rounded-lg cursor-pointer shadow-sm shadow-earie mx-auto";
+        bookDiv.dataset.bookIndex = index.toString(); // Store the index of the book in the array for easy retrieval.
+
+        // Add an event listener to each book div to handle clicks.
+        bookDiv.addEventListener("click", () => {
+          selectedBook = books[parseInt(bookDiv.dataset.bookIndex!)];
+          renderBookDetails(selectedBook);
+        });
+
+        // Create the HTML for the book's image (as a link) and title.
+        const imageElement = createBookImageElement(
+          book.thumbnail ?? null,
+          book.title,
+          true // Make the thumbnail a link to the details section.
+        );
+
+        bookDiv.innerHTML = `
+			${imageElement}
+			<h2 class="font-bold text-xs md:text-md lg:text-lg mt-2 text-citron">${book.title}</h2>
+			<p class="text-xs md:text-sm opacity-75 text-silk">${book.authors.join(", ")}</p>
+		  `;
+        booksContainer.appendChild(bookDiv); // Add the created div to the books container.
+      });
+      // Initially hide the book details section if it exists and no book is selected
+      if (bookDetailsContainer && !selectedBook) {
+        bookDetailsContainer.style.display = "none";
+      }
+    } else {
+      booksContainer.innerHTML = `<p class="text-center col-span-full text-gray-400">No books found. Try a different search.</p>`;
+      renderBookDetails(null); // Clear book details if no books found
+    }
+  }
+
+  /**
+   * Updates the search query based on the input field's value, fetches new books, and renders them.
+   * It also clears the currently selected book and hides the book details section.
+   */
+  async function updateQuery() {
+    if (queryInput) {
+      query = queryInput.value; // Get the current value from the search input field.
+      const fetchedBooks = await fetchBooks(query); // Fetch books based on the new query.
+      books = fetchedBooks; // Update the local books array with the fetched data.
+      renderBooks(books); // Render the new list of books.
+      selectedBook = null; // Clear the selected book when a new search is performed.
+      if (bookDetailsContainer) {
+        bookDetailsContainer.innerHTML = ""; // Clear the content of the book details container.
+        bookDetailsContainer.style.display = "none"; // Hide the book details section.
+      }
+    }
+  }
+
+  // Add an event listener to the update button to trigger the book search.
+  if (updateButton) {
+    updateButton.addEventListener("click", updateQuery);
+  }
+</script>
+
+<script type="text/javascript" src="https://www.google.com/books/jsapi.js"
+></script>
+<script type="text/javascript">
+  google.books.load();
+
+  function initialize() {
+    const viewerCanvas = document.getElementById("viewerCanvas");
+    if (viewerCanvas) {
+      var viewer = new google.books.DefaultViewer(viewerCanvas);
+      viewer.load("ISBN:9788417347284");
+    }
+  }
+
+  google.books.setOnLoadCallback(initialize);
+</script>
