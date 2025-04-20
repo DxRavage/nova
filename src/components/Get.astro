@@ -1,29 +1,41 @@
+---
+import Flow from "../components/Flow.astro";
+---
+
 <section class="grid grid-row gap-4 p-14">
   <section
     class="flex justify-center text-center gap-4 p-4 border-2 border-stone-600/40 rounded-xl mx-auto bg-gray-400/50"
   >
+    <h1 class="text-gray-300 font-bold text-2xl">REST API Demo</h1>
     <input
-      class="p-2 w-36 md:w-64"
+      class="p-2 w-36 md:w-64 rounded-2xl border-2 border-sky-100/20"
       type="text"
       id="queryInput"
       placeholder="Enter your query"
     />
     <button
-      class="bg-moss hover:bg-emerald text-silk px-4 py-2 rounded-lg cursor-pointer shadow-sm shadow-earie"
+      class="bg-violet-700 hover:bg-violet-900 text-sky-100 px-4 py-2 rounded-lg cursor-pointer shadow-sm shadow-stone-600"
       id="updateButton">Search</button
     >
   </section>
 
-  <div class="border-2 border-stone-600/40 rounded-xl bg-gray-400/50 px-32">
+  <!-- Book Containers -->
+  <div class="border-2 border-stone-600/40 rounded-xl bg-gray-400/50 mx-auto p-8 px-32">
     <section class="mt-8" id="bookDetails"></section>
 
     <section
-      class="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+      class="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
       id="booksContainer"
     >
     </section>
   </div>
 
+  <!-- Embedded POSTMAN Flow -->
+  <article
+    class="border-2 border-stone-600/30 rounded-xl bg-gray-400/50 mx-auto p-4 shadow-sm shadow-stone-600"
+  >
+    <Flow />
+  </article>
 </section>
 
 <script>
@@ -92,12 +104,12 @@
           ratingsCount: item.volumeInfo?.ratingsCount ?? null,
           previewLink: item.volumeInfo?.previewLink || null,
         })) ?? [] // Return an empty array if json.items is undefined.
-      ); 
+      );
     } catch (error) {
       // Log any errors that occur during the API request or data processing.
       console.error("Error fetching books:", error); // Return an empty array in case of an error.
       return [];
-    } 
+    }
   }
   /**
    * Creates an HTML string for displaying a book's thumbnail image or a "No Image Available" message.
@@ -112,12 +124,12 @@
     isLink = false
   ): string {
     if (thumbnail) {
-      const img = `<img class="object-contain rounded-md shadow-md" src="${thumbnail}" alt="${title}" ${isLink ? 'width="150" height="200"' : ""} />`;
+      const img = `<img class="object-contain rounded-md shadow-md shadow-stone-600" src="${thumbnail}" alt="${title}" ${isLink ? 'width="200" height="200"' : ""} />`;
       return isLink
         ? `<a href="#bookDetails" class="hover:opacity-65">${img}</a>`
         : img;
     } else {
-      return `<p class="text-center text-earie">No Image Available</p>`;
+      return `<p class="text-center text-stone-800">No Image Available</p>`;
     }
   }
 
@@ -132,21 +144,24 @@
 
     if (book) {
       // Create the HTML for the book details using the provided Book object.
-      const imageElement = createBookImageElement(book.thumbnail ?? null, book.title);
+      const imageElement = createBookImageElement(
+        book.thumbnail ?? null,
+        book.title
+      );
       bookDetailsContainer.innerHTML = `
-		  <div class="bg-silk p-4 rounded-md shadow-md shadow-earie text-left">
+		  <div class="bg-gray-400/50 p-4 rounded-md shadow-md shadow-stone-600 text-left">
 			<div class="flex gap-4 mb-4">
 			  ${imageElement}
 			  <div>
-				<h2 class="font-bold text-sm md:text-xl text-moss">${book.title}</h2>
-				<p class="text-sm opacity-75 text-citron">${book.authors.join(", ")}</p>
-				${book.publishedDate ? `<p class="text-xs md:text-sm text-earie">Published: ${book.publishedDate}</p>` : ""}
-				${book.averageRating ? `<p class="text-xs md:text-sm text-earie">Rating: ${book.averageRating} (${book.ratingsCount || "No"} ratings)</p>` : ""}
-				${book.categories && book.categories.length > 0 ? `<p class="text-xs md:text-sm text-earie">Categories: ${book.categories.join(", ")}</p>` : ""}
+				<h2 class="font-bold text-sm md:text-xl text-stone-800">${book.title}</h2>
+				<p class="text-sm opacity-75 text-stone-800">${book.authors.join(", ")}</p>
+				${book.publishedDate ? `<p class="text-xs md:text-sm text-stone-800">Published: ${book.publishedDate}</p>` : ""}
+				${book.averageRating ? `<p class="text-xs md:text-sm text-stone-800">Rating: ${book.averageRating} (${book.ratingsCount || "No"} ratings)</p>` : ""}
+				${book.categories && book.categories.length > 0 ? `<p class="text-xs md:text-sm text-stone-800">Categories: ${book.categories.join(", ")}</p>` : ""}
 				${book.previewLink ? `<a href="${book.previewLink}" target="_blank" class="text-blue-500 hover:underline">Preview</a>` : ""}
 			  </div>
 			</div>
-			<p class="text-earie text-xs md:text-sm">${book.description}</p>
+			<p class="text-stone-800 text-xs md:text-sm">${book.description}</p>
 		  </div>
 		`;
       bookDetailsContainer.style.display = "block"; // Make the details section visible.
@@ -172,7 +187,7 @@
       books.forEach((book, index) => {
         const bookDiv = document.createElement("div");
         bookDiv.className =
-          "p-4 bg-moss hover:bg-hover text-earie rounded-lg cursor-pointer shadow-sm shadow-earie mx-auto";
+          "p-4 mx-auto min-h-full justify-center bg-sky-100/20 hover:bg-hover text-stone-900 rounded-lg cursor-pointer shadow-sm shadow-stone-600";
         bookDiv.dataset.bookIndex = index.toString(); // Store the index of the book in the array for easy retrieval.
 
         // Add an event listener to each book div to handle clicks.
@@ -190,8 +205,8 @@
 
         bookDiv.innerHTML = `
 			${imageElement}
-			<h2 class="font-bold text-xs md:text-md lg:text-lg mt-2 text-citron">${book.title}</h2>
-			<p class="text-xs md:text-sm opacity-75 text-silk">${book.authors.join(", ")}</p>
+			<h2 class="font-bold text-xs md:text-md text-stone-800 p-4">${book.title}</h2>
+			<p class="text-xs md:text-sm opacity-75 text-stone-200">${book.authors.join(", ")}</p>
 		  `;
         booksContainer.appendChild(bookDiv); // Add the created div to the books container.
       });
@@ -229,18 +244,7 @@
   }
 </script>
 
-<script type="text/javascript" src="https://www.google.com/books/jsapi.js"
-></script>
-<script type="text/javascript">
+<!-- Load Google Books API JavaScript library -->
+<script type="text/javascript" src="https://www.google.com/books/jsapi.js">
   google.books.load();
-
-  function initialize() {
-    const viewerCanvas = document.getElementById("viewerCanvas");
-    if (viewerCanvas) {
-      var viewer = new google.books.DefaultViewer(viewerCanvas);
-      viewer.load("ISBN:9788417347284");
-    }
-  }
-
-  google.books.setOnLoadCallback(initialize);
 </script>
