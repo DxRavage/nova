@@ -1,4 +1,4 @@
-![Web Screenshot](public/ss1.png)
+![Web Screenshot](public/ss.png)
 
 # REST API
 
@@ -11,8 +11,9 @@ This is a simple implementation of Google Books API
 - **API:** GET books, title, image, description and other items
 
 ## Capturas de Pantalla
-![Screenshot](public/ss.png)
 ![Screenshot](public/ss2.png)
+![Screenshot](public/ss.png)
+![Screenshot](public/ss1.png)
 
 ## 🛠️ Stack
 
