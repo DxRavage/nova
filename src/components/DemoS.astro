@@ -1,0 +1,36 @@
+<script>
+  const booksContainer = document.getElementById(
+    "booksContainer"
+  ) as HTMLElement;
+
+  type Book = {
+    title: string;
+    authors: string[];
+    thumbnail: string;
+    rating: number;
+  };
+
+  function renderBooks(books: Book[]) {
+    if (books.length > 0) {
+      books.forEach((book, index) => {
+        const bookDiv = document.createElement("div");
+        bookDiv.dataset.bookIndex = index.toString();
+        const imageElement = createBookImageElement(book.thumbnail, book.title);
+        bookDiv.innerHTML = `${imageElement}
+<h>${book.title}</h2>
+<p>${book.authors}</p>
+<p>${book.rating}</p>`;
+        booksContainer.appendChild(bookDiv);
+      });
+    }
+  }
+
+  function createBookImageElement(
+    thumbnail: string | undefined,
+    title: string
+  ): string | undefined {
+    return thumbnail && `<img src="${thumbnail}" alt="${title}">`;
+  }
+</script>
+
+<section id="booksContainer"></section>
