@@ -1,3 +1,42 @@
 <script>
-    
+  const url = "https://www.googleapis.com/books/v1/volumes?q=";
+  let query = "cosmere";
+  let books = [];
+
+  async function fetchBooks() {
+    const apiUrl = `${url}${encodeURIComponent(query)}`;
+    const response = await fetch(apiUrl);
+    const json = await response.json();
+
+    books = json.items.map((item: any) => {
+      return {
+        title: item.volumeInfo?.title,
+        thumbnail: item.volumeInfo?.imageLinks?.thumbnail,
+        description: item.volumeInfo?.description,
+      };
+    });
+    console.log(books);
+    // renderBooks(books);
+  }
+
+    // function renderBooks(books: Book[]) {
+    //   const booksContainer = document.getElementById("booksContainer");
+
+    //   books.forEach((book) => {
+    //     const bookDiv = document.createElement("div");
+    //     bookDiv.className =
+    //       "p-4 mx-auto min-h-full bg-sky-100/20 text-stone-900 rounded-lg shadow-sm shadow-stone-600";
+
+    //     bookDiv.innerHTML = `
+    //           <img src="${book.thumbnail}"/>
+    //           <h3 class="text-2xl">${book.title}</h3>
+    //           <p class= "line-clamp-3">${book.description}</p>
+    //         `;
+    //     booksContainer.appendChild(bookDiv);
+    //   });
+    // }
+
+  fetchBooks();
 </script>
+
+<section class="grid grid-cols-4 gap-4 p-12" id="booksContainer"></section>
